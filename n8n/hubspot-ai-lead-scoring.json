@@ -1,0 +1,446 @@
+{
+  "name": "Score HubSpot leads against your ICP with AI",
+  "nodes": [
+    {
+      "id": "0defc1ac-10b3-56de-80b5-8fec09b82c95",
+      "name": "Template overview",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -760,
+        -300
+      ],
+      "parameters": {
+        "color": 7,
+        "width": 520,
+        "height": 860,
+        "content": "## Score HubSpot leads against your ICP with AI\n\n**Who it's for:** sales teams that keep their leads in HubSpot and want every new contact ranked by how well it fits their ideal customer profile.\n\n**What it does:** every morning, the workflow finds HubSpot contacts with no score yet. For each one it reads the contact and its company, and asks the OpenAI Decisions API one question: how well does this lead match your ICP? It writes four properties back to the contact: **AI ICP fit** (No / Weak / Partial / Strong fit), **AI ICP score** (0-100), **AI ICP confidence** and **AI ICP scored at**.\n\n### How to set up\n1. Add credentials: **HubSpot Service Key** (paste a HubSpot service key with the scopes `crm.objects.contacts.read`, `crm.objects.contacts.write`, `crm.schemas.contacts.write`, `crm.objects.companies.read`) and **OpenAI**.\n2. Paste your ideal customer profile into **Set your ICP**. Start from the ICP.md template in the GitHub repo.\n3. Click **Execute workflow** once to test, then activate it.\n\n### Requirements\nHubSpot (the free plan works), an OpenAI API key.\n\n### How to customize\nSend more fields to the model in **Describe the lead**. Change the four fit levels in **Score against ICP**. The same workflow as a Python script with agent instructions: github.com/evaboot-labs/AI-driven-Lead-Scoring"
+      }
+    },
+    {
+      "id": "9b20c15a-4436-58a4-9b00-0cf85a7e7c27",
+      "name": "Step 1",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -180,
+        -120
+      ],
+      "parameters": {
+        "color": 7,
+        "width": 660,
+        "height": 420,
+        "content": "### 1. Prepare\nRuns every morning. Creates the four AI ICP properties in HubSpot (an error on later runs only means they already exist), then loads your ICP."
+      }
+    },
+    {
+      "id": "0a071bb8-e973-5b08-8645-11c49532f28c",
+      "name": "Step 2",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        520,
+        -120
+      ],
+      "parameters": {
+        "color": 7,
+        "width": 900,
+        "height": 420,
+        "content": "### 2. Find unscored contacts\nHubSpot search returns up to 100 contacts with no **AI ICP scored at** yet. Each contact's company is read, because size, industry and location usually live on the company."
+      }
+    },
+    {
+      "id": "80dbdd37-3ad0-5794-a65d-62fca2f28d75",
+      "name": "Step 3",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1460,
+        -120
+      ],
+      "parameters": {
+        "color": 7,
+        "width": 900,
+        "height": 420,
+        "content": "### 3. Score and write back\nThe OpenAI Decisions API answers one `score` question with four levels and a confidence. The result is written to the contact. Sort HubSpot by **AI ICP score**, not only by the fit label: 80 can still be Partial fit."
+      }
+    },
+    {
+      "id": "297d9d22-765d-57ff-8656-b32091b62a37",
+      "name": "Every morning at 8am",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -140,
+        -20
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "days",
+              "triggerAtHour": 8
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "2e398cd0-dc0a-57ab-b0d2-ec304beca345",
+      "name": "Test run",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -140,
+        160
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "2f138c8d-77b5-51bb-be5b-77d31e7ad503",
+      "name": "Create score properties",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        60,
+        60
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.hubapi.com/crm/v3/properties/contacts/batch/create",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "hubspotAppToken",
+        "options": {},
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"inputs\": [\n    {\n      \"name\": \"ai_icp_fit\",\n      \"label\": \"AI ICP fit\",\n      \"type\": \"enumeration\",\n      \"fieldType\": \"select\",\n      \"groupName\": \"contactinformation\",\n      \"options\": [\n        {\n          \"label\": \"No fit\",\n          \"value\": \"no_fit\",\n          \"displayOrder\": 0\n        },\n        {\n          \"label\": \"Weak fit\",\n          \"value\": \"weak_fit\",\n          \"displayOrder\": 1\n        },\n        {\n          \"label\": \"Partial fit\",\n          \"value\": \"partial_fit\",\n          \"displayOrder\": 2\n        },\n        {\n          \"label\": \"Strong fit\",\n          \"value\": \"strong_fit\",\n          \"displayOrder\": 3\n        }\n      ]\n    },\n    {\n      \"name\": \"ai_icp_score\",\n      \"label\": \"AI ICP score\",\n      \"type\": \"number\",\n      \"fieldType\": \"number\",\n      \"groupName\": \"contactinformation\"\n    },\n    {\n      \"name\": \"ai_icp_confidence\",\n      \"label\": \"AI ICP confidence\",\n      \"type\": \"number\",\n      \"fieldType\": \"number\",\n      \"groupName\": \"contactinformation\"\n    },\n    {\n      \"name\": \"ai_icp_scored_at\",\n      \"label\": \"AI ICP scored at\",\n      \"type\": \"datetime\",\n      \"fieldType\": \"date\",\n      \"groupName\": \"contactinformation\"\n    }\n  ]\n}"
+      },
+      "credentials": {
+        "hubspotAppToken": {
+          "id": "",
+          "name": "HubSpot service key"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "54f85810-b10f-5222-9358-b7badb5847d7",
+      "name": "Set your ICP",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        260,
+        60
+      ],
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "icp",
+              "name": "icp",
+              "type": "string",
+              "value": "# Ideal customer profile\n\n<!--\nReplace every line below with your own profile. Keep it short and concrete:\nthe model reads this whole file for every lead.\nWrite each criterion so a stranger could answer yes or no from a LinkedIn profile.\n-->\n\n## Company must-haves\n\n- Industry: B2B software (SaaS), IT services, or recruiting agencies.\n- Size: 11 to 500 employees.\n- Location: Europe or North America.\n- Sells to other businesses, with an outbound sales team.\n\n## Buyer must-haves\n\n- Function: Sales, Business Development, Growth, or Revenue Operations.\n- Seniority: Head of, Director, VP, C-level, or Founder.\n\n## Positive signals (raise the fit, not required)\n\n- Job title mentions outbound, prospecting, lead generation, or SDR team.\n- Company is hiring SDRs or BDRs.\n- Lead uses LinkedIn Sales Navigator.\n\n## Disqualifiers (always No fit)\n\n- Students, interns, job seekers, or freelancers with no team.\n- Competitors: lead-data or email-finder vendors.\n- Company with more than 5,000 employees.\n- Government, education, or non-profit organizations.\n"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "executeOnce": true
+    },
+    {
+      "id": "4f30ef4c-082f-5485-826f-931c6700e002",
+      "name": "Find unscored contacts",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        560,
+        60
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.hubapi.com/crm/v3/objects/contacts/search",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "hubspotAppToken",
+        "options": {},
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  filterGroups: [{ filters: [{ propertyName: 'ai_icp_scored_at', operator: 'NOT_HAS_PROPERTY' }] }],\n  properties: ['firstname', 'lastname', 'jobtitle', 'company', 'industry', 'country', 'city'],\n  limit: 100\n}) }}"
+      },
+      "credentials": {
+        "hubspotAppToken": {
+          "id": "",
+          "name": "HubSpot service key"
+        }
+      }
+    },
+    {
+      "id": "5faaec87-ddbe-52ea-9bc7-d6a5df48d656",
+      "name": "One contact per item",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        760,
+        60
+      ],
+      "parameters": {
+        "fieldToSplitOut": "results",
+        "options": {}
+      }
+    },
+    {
+      "id": "545f128a-21b7-5cdc-83a2-2d3adf4c64e6",
+      "name": "Get company ID",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        960,
+        60
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "=https://api.hubapi.com/crm/v4/objects/contacts/{{ $json.id }}/associations/companies",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "hubspotAppToken",
+        "options": {}
+      },
+      "credentials": {
+        "hubspotAppToken": {
+          "id": "",
+          "name": "HubSpot service key"
+        }
+      }
+    },
+    {
+      "id": "d6c578e7-1402-5ed1-ab1c-8fde5a8685a3",
+      "name": "Get company",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1160,
+        60
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "=https://api.hubapi.com/crm/v3/objects/companies/{{ $json.results[0]?.toObjectId }}?properties=domain,industry,numberofemployees,country,description",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "hubspotAppToken",
+        "options": {}
+      },
+      "credentials": {
+        "hubspotAppToken": {
+          "id": "",
+          "name": "HubSpot service key"
+        }
+      },
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": true
+    },
+    {
+      "id": "bbd07dc7-1806-594c-bac3-974dfcbf04ca",
+      "name": "Describe the lead",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1500,
+        60
+      ],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Turn the contact and its company into the text the model reads.\nconst contact = $('One contact per item').item.json;\nconst company = $json.properties || {};\nconst p = contact.properties;\nconst lines = [\n  ['Job title', p.jobtitle], ['Company', p.company], ['Industry', p.industry],\n  ['Location', p.country], ['City', p.city],\n  ['Company domain', company.domain], ['Company industry', company.industry],\n  ['Company employees', company.numberofemployees], ['Company location', company.country],\n  ['Company description', company.description],\n].filter(([, v]) => v).map(([k, v]) => `${k}: ${v}`);\nreturn { id: contact.id, name: `${p.firstname || ''} ${p.lastname || ''}`.trim(), lead: lines.join('\\n') };"
+      }
+    },
+    {
+      "id": "8ad79ebb-6782-559e-9f1a-33269525a5cc",
+      "name": "Score against ICP",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1700,
+        60
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/decisions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "options": {},
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  model: 'gpt-6-luna',\n  input: $json.lead,\n  questions: [{\n    type: 'score',\n    name: 'icp_fit',\n    instructions: 'How well does this lead match the ideal customer profile below?\\n\\n' + $('Set your ICP').first().json.icp,\n    levels: [\n      { label: 'No fit', description: 'Fails a disqualifier, or matches none of the must-haves.' },\n      { label: 'Weak fit', description: 'Matches one must-have. The other must-haves fail or are unknown.' },\n      { label: 'Partial fit', description: 'Matches most must-haves, but one fails or is unknown.' },\n      { label: 'Strong fit', description: 'Matches every must-have and no disqualifier.' }\n    ]\n  }]\n}) }}"
+      },
+      "credentials": {
+        "openAiApi": {
+          "id": "",
+          "name": "OpenAI"
+        }
+      }
+    },
+    {
+      "id": "ca07b2a8-1bbb-5923-a199-cc34aa27f9fb",
+      "name": "Map the score",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1900,
+        60
+      ],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Decision score is 0-3. Store the label, a 0-100 score and the confidence.\nconst answer = $json.answers[0];\nconst fits = ['no_fit', 'weak_fit', 'partial_fit', 'strong_fit'];\nreturn {\n  id: $('Describe the lead').item.json.id,\n  properties: {\n    ai_icp_fit: fits[Math.round(answer.score)],\n    ai_icp_score: Math.round(answer.score / 3 * 100),\n    ai_icp_confidence: Math.round(answer.confidence * 100) / 100,\n    ai_icp_scored_at: new Date().toISOString().slice(0, 19) + 'Z',\n  },\n};"
+      }
+    },
+    {
+      "id": "9976a742-6dd1-5eab-b4c9-66dcdc849f1c",
+      "name": "Write score to HubSpot",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2100,
+        60
+      ],
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://api.hubapi.com/crm/v3/objects/contacts/{{ $json.id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "hubspotAppToken",
+        "options": {},
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ properties: $json.properties }) }}"
+      },
+      "credentials": {
+        "hubspotAppToken": {
+          "id": "",
+          "name": "HubSpot service key"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Every morning at 8am": {
+      "main": [
+        [
+          {
+            "node": "Create score properties",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create score properties": {
+      "main": [
+        [
+          {
+            "node": "Set your ICP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set your ICP": {
+      "main": [
+        [
+          {
+            "node": "Find unscored contacts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find unscored contacts": {
+      "main": [
+        [
+          {
+            "node": "One contact per item",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "One contact per item": {
+      "main": [
+        [
+          {
+            "node": "Get company ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get company ID": {
+      "main": [
+        [
+          {
+            "node": "Get company",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get company": {
+      "main": [
+        [
+          {
+            "node": "Describe the lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Describe the lead": {
+      "main": [
+        [
+          {
+            "node": "Score against ICP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Score against ICP": {
+      "main": [
+        [
+          {
+            "node": "Map the score",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Map the score": {
+      "main": [
+        [
+          {
+            "node": "Write score to HubSpot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Test run": {
+      "main": [
+        [
+          {
+            "node": "Create score properties",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
