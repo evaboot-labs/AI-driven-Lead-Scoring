@@ -207,7 +207,8 @@ def main():
     updates = [to_update(*r) for r in results]
     for (contact, _, _), update in zip(results, updates):
         p, u = contact["properties"], update["properties"]
-        print(f"  {u['ai_icp_score']:>3}  {u['ai_icp_fit']:<12} {p.get('jobtitle') or '?'} at {p.get('company') or '?'}")
+        lead = f"{p.get('jobtitle') or '?'} at {p.get('company') or '?'}"
+        print(f"  {u['ai_icp_score']:>3}  {u['ai_icp_fit']:<12} {lead if len(lead) <= 52 else lead[:51] + '…'}")
 
     if args.dry_run:
         print("Dry run: nothing written to HubSpot.")
