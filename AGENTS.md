@@ -5,9 +5,9 @@ This repo scores HubSpot contacts against `ICP.md` with an AI decision model (th
 1. Follow the skill in `skills/score-leads/SKILL.md` step by step.
 2. Check that `.env` has `HUBSPOT_TOKEN` and `OPENAI_API_KEY` (or `JEV_API_KEY` for `--model jev`). If one is missing, tell the user how to get it from `docs/setup.md` and stop.
 3. Read `ICP.md`. If it still holds the example profile, ask the user for their own and rewrite the file first.
-4. Run `python3 score_leads.py --dry-run --limit 20` and show the user the results as a table. Point out scores that look wrong, for example a likely competitor or a company outside the ICP.
+4. Run `python3 score_leads.py --dry-run --limit 20` (add `--model jev` when the user has only a JEV key, and `--rescore` when contacts were scored before against an older `ICP.md`) and show the user the results as a table. Point out scores that look wrong, for example a likely competitor or a company outside the ICP.
 5. Ask the user if the scores look right. If not, sharpen `ICP.md` and repeat step 4.
-6. When the user agrees, run `python3 score_leads.py` (add `--rescore` if `ICP.md` changed since the last run).
+6. When the user agrees, run `python3 score_leads.py` with the same `--model` and `--rescore` flags as the dry run.
 7. Report how many contacts were scored, and how many landed in each fit level.
 
 For n8n, see `docs/n8n.md`.
