@@ -1,0 +1,7 @@
+{"layout": "flow", "eyebrow": "evaboot-labs · ai-driven-lead-scoring", "headline": "Score every lead against your ICP.",
+ "subline": "An AI decision model writes the fit back to HubSpot, with its confidence.",
+ "nodes": [{"label": "01 · Source", "title": "HubSpot contacts", "caption": "Every contact not scored yet"},
+           {"label": "02 · Profile", "title": "ICP.md", "caption": "Your ideal customer, in one file"},
+           {"label": "03 · Decide", "title": "AI decision model", "caption": "OpenAI Decisions API or JEV"},
+           {"label": "04 · Result", "title": "Fit in HubSpot", "caption": "Level, score and confidence"}],
+ "spec": "python 3.9+ · no packages · <em>score_leads.py</em>"}

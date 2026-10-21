@@ -1,136 +1,86 @@
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset=".github/assets/banner-dark.png">
+  <img src=".github/assets/banner-light.png" alt="HubSpot contacts and ICP.md go to an AI decision model, which writes the fit back to HubSpot" width="1280">
+</picture>
+
 # AI lead scoring: ICP fit in HubSpot
 
-Score every HubSpot contact against your ideal customer profile with an AI decision model,
-and write the result back to HubSpot as four contact properties:
+Score every HubSpot contact against your ideal customer profile with an AI decision model, and write the fit, a score from 0 to 100 and the model's confidence back to HubSpot.
 
-| Property | Example | Meaning |
-|---|---|---|
-| `ai_icp_fit` | Partial fit | No fit, Weak fit, Partial fit, or Strong fit |
-| `ai_icp_score` | 68 | 0 to 100 |
-| `ai_icp_confidence` | 0.73 | How sure the model is, 0 to 1 |
-| `ai_icp_scored_at` | 2026-10-16 | When the contact was scored |
+[![Works with Claude Code · Codex · Cursor](https://img.shields.io/badge/works%20with-Claude%20Code%20%C2%B7%20Codex%20%C2%B7%20Cursor-5719D9)](AGENTS.md)
+[![License: MIT](https://img.shields.io/badge/license-MIT-5719D9)](LICENSE)
 
-Your profile lives in one file, [`ICP.md`](ICP.md). Change the file, run the script again
-with `--rescore`, and every score follows.
+[![An AI Agent runs a dry run, shows the scores, gets a yes and writes the fit to HubSpot](.github/assets/demo.gif)](.github/assets/demo.mp4)
 
-Built by [Evaboot](https://evaboot.com). The same workflow is available as an
-[n8n template](https://evaboot.com/integrations/n8n).
+<sub>The full run, at real speed: [demo.mp4](.github/assets/demo.mp4)</sub>
+
+## Set it up in one prompt
+
+Paste this into Claude Code, Codex or Cursor:
+
+```text
+Score my HubSpot contacts against my ideal customer profile. Clone
+https://github.com/evaboot-labs/ai-driven-lead-scoring, read AGENTS.md and follow the
+score-leads skill. Run a dry run first and show me the scores before you write anything
+to HubSpot.
+```
+
+<details>
+<summary>Or install the skill</summary>
+
+Claude Code:
+
+```text
+/plugin marketplace add evaboot-labs/ai-driven-lead-scoring
+/plugin install ai-driven-lead-scoring@evaboot-labs-ai-driven-lead-scoring
+```
+
+Codex, Cursor and other agents:
+
+```bash
+npx skills add evaboot-labs/ai-driven-lead-scoring
+```
+
+</details>
 
 ## How it works
 
-```
-Sales Navigator ──Evaboot──> HubSpot contacts ──> score_leads.py ──> HubSpot properties
-                                                       │
-                                     ICP.md + lead ──> OpenAI Decisions API (or JEV)
-```
+**1. Every contact gets a fit.** The script scores each contact that has no score yet.
 
-1. The script asks HubSpot for every contact that has no `ai_icp_scored_at` yet.
-2. For each contact it sends the lead's details and `ICP.md` to a decision model, as a
-   `score` question with four levels.
-3. It writes the fit, score and confidence back to the contact in batches of 100.
+<img src=".github/assets/screenshots/1-contacts-scored.png" alt="HubSpot contacts with the four AI ICP columns filled in" width="800">
 
-A decision model returns a fixed answer with a probability, not free text. It is faster,
-cheaper and more consistent than a chat model for a yes/no or score task, and the
-confidence tells you which leads need a human look.
+**2. Score and confidence on the record.** The confidence shows which leads need a human look.
 
-## Setup
+<img src=".github/assets/screenshots/2-contact-record.png" alt="One HubSpot contact with its AI ICP fit, score and confidence" width="800">
 
-You need Python 3.9 or later. No packages to install.
+**3. Filter on Strong fit and call those first.** Change `ICP.md`, rerun with `--rescore`, and every score follows.
 
-1. **Get a HubSpot service key.** In HubSpot, open Development > Keys > Service Keys and
-   click **Create service key**. Name it, then add these five scopes:
-   `crm.objects.contacts.read`, `crm.objects.contacts.write`,
-   `crm.schemas.contacts.read`, `crm.schemas.contacts.write`,
-   `crm.objects.companies.read`.
-   Click **Create**, then **Show** to copy the key (it starts with `pat-`).
-   Service keys replace the old private apps, which HubSpot now calls legacy apps.
-2. **Get an OpenAI key** at https://platform.openai.com/api-keys.
-3. **Copy the env file** and fill it in:
-   ```bash
-   cp .env.example .env
-   ```
-4. **Write your ICP.** Replace the example in [`ICP.md`](ICP.md) with your own profile.
+<img src=".github/assets/screenshots/3-strong-fit-view.png" alt="A HubSpot contacts view filtered on Strong fit" width="800">
 
-## Run
+## Four levels, one confidence
 
-Test on 10 contacts without writing anything:
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset=".github/assets/levels-dark.png">
+  <img src=".github/assets/levels-light.png" alt="Four fit levels: No fit, Weak fit, Partial fit and Strong fit, each with its rule" width="1280">
+</picture>
 
-```bash
-python3 score_leads.py --dry-run --limit 10
-```
+A decision model returns a fixed answer with a probability, not free text: faster, cheaper and more consistent than a chat model for a score. The script writes `ai_icp_fit`, `ai_icp_score`, `ai_icp_confidence` and `ai_icp_scored_at`.
 
-```
-Scoring 10 contacts with openai...
-   12  no_fit       Salesperson at HubSpot
-   54  partial_fit  Head of Sales, Israel at Upwind Security
-   43  weak_fit     Head of Sales - SDS at Enhesa
-   71  partial_fit  VP Sales, Sierra Pacific at Intelligent Technical Solutions
-    7  no_fit       Head of CRM at Danske Spil
-   ...
-Dry run: nothing written to HubSpot.
-```
+## What you need
 
-If the scores look right, score every unscored contact:
+- **HubSpot** (the free plan works) and a service key with five contact and company scopes: [setup](docs/setup.md).
+- **An OpenAI API key**, or a Typesafe JEV key for `--model jev`.
+- **Python 3.9 or later.** No packages to install.
+- **Your ideal customer profile** in [`ICP.md`](ICP.md).
+- **Cost:** about 8 cents of OpenAI per 1,000 contacts. Leads from an [Evaboot](https://dash.evaboot.com/accounts/signup/?last_click_origin=ai-driven-lead-scoring-repo) export come with the industry and size the score needs.
 
-```bash
-python3 score_leads.py
-```
+## Go further
 
-| Option | Does |
+| Page | For |
 |---|---|
-| `--dry-run` | Prints the scores, writes nothing |
-| `--limit N` | Scores at most N contacts |
-| `--rescore` | Scores contacts that already have a score, for example after you change `ICP.md` |
-| `--model jev` | Uses Typesafe JEV instead of OpenAI |
+| [Set up and run](docs/setup.md) | Keys, options, JEV, and which HubSpot fields the model sees |
+| [n8n workflow](docs/n8n.md) | The same scoring every morning in n8n |
 
-HubSpot's search index updates a few seconds after a write. If you run the script twice
-in a row, the second run can score the same contacts again. Wait a minute between runs.
+---
 
-## Use JEV instead of OpenAI
-
-[JEV](https://typesafe.ai/blog/introducing-system-one-models-and-jev) from Typesafe is a
-decision model like OpenAI's, and in our tests it answered in about 0.3 seconds instead
-of about 2. It costs $0.042 per million input tokens against OpenAI's $0.10. Access is by
-waitlist at https://console.typesafe.ai. When you have a key, add `JEV_API_KEY` to `.env`
-and run with `--model jev`.
-
-## Run it in n8n
-
-Import [`n8n/hubspot-ai-lead-scoring.json`](n8n/hubspot-ai-lead-scoring.json) into n8n
-(Workflows > Import from file). Add a **HubSpot Service Key** credential with your service
-key and an **OpenAI** credential, paste your ICP into **Set your ICP**, then click
-**Execute workflow**. It runs every morning at 8am once activated. The JSON is generated
-by `n8n/build_workflow.py` from `ICP.md`.
-
-## Run it with an AI coding agent
-
-Open this folder in Claude Code, Codex, Cursor or any coding agent and ask:
-*"Score my new HubSpot leads."* The agent follows [`AGENTS.md`](AGENTS.md) (Claude Code
-uses the same steps from [`.claude/skills/score-leads`](.claude/skills/score-leads/SKILL.md)):
-it checks your ICP, does a dry run, shows you the results and asks before it writes anything.
-
-To fill HubSpot with leads first, connect the [Evaboot MCP](https://evaboot.com/linkedin-sales-navigator-mcp)
-to your AI assistant and ask: *"Export my Sales Navigator search <url> and push it to HubSpot."*
-
-## Which HubSpot fields are sent
-
-The script sends the contact properties in `LEAD_PROPERTIES` (name, job title, company,
-industry, employee count, country, city, LinkedIn URL) and the properties of the
-contact's company in `COMPANY_PROPERTIES` (name, domain, industry, employee count,
-country, city, description). Add any other property's internal name to those lists.
-
-**The score is only as good as these fields.** If industry or country is empty, the model
-cannot confirm those must-haves, and almost no lead reaches Strong fit. Fill them before
-you score. An [Evaboot](https://evaboot.com) export of a Sales Navigator search includes
-Company Industry, Company Employee Exact Count, Company Location and Sales Team Size for
-every lead. Map those columns to HubSpot properties on the Evaboot HubSpot mapping page
-(dash.evaboot.com/dash/integrations/hubspot/mapping/) before you push the export.
-
-HubSpot's company **Industry** property is a fixed list of 148 values, and LinkedIn
-industry names are not on it, so HubSpot drops them. Map **Profile Industry** to the
-contact's Industry (free text), or map **Company Industry** to a custom single-line text
-company property.
-
-## License
-
-MIT
+Agents: start at [AGENTS.md](AGENTS.md) · Built by [Evaboot](https://evaboot.com) · More workflows at [github.com/evaboot-labs](https://github.com/evaboot-labs) · [MIT license](LICENSE)

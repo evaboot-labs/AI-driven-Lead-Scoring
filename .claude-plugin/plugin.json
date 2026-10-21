@@ -1,0 +1,21 @@
+{
+  "name": "ai-driven-lead-scoring",
+  "version": "1.0.0",
+  "description": "Score HubSpot contacts against your ideal customer profile with an AI decision model (OpenAI Decisions API or JEV) and write the fit back to HubSpot. Python script, n8n template and agent skill.",
+  "author": {
+    "name": "Evaboot",
+    "url": "https://evaboot.com"
+  },
+  "homepage": "https://evaboot.com/blog/ai-powered-fit-scoring-for-icp-lead-list",
+  "repository": "https://github.com/evaboot-labs/ai-driven-lead-scoring",
+  "license": "MIT",
+  "privacyPolicyUrl": "https://evaboot.com/privacy-policy",
+  "keywords": [
+    "lead-scoring",
+    "hubspot",
+    "icp",
+    "openai",
+    "evaboot"
+  ],
+  "skills": "./skills/"
+}
