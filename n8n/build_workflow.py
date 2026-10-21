@@ -101,7 +101,7 @@ OVERVIEW = f"""## Score HubSpot leads against your ICP with AI
 HubSpot (the free plan works), an OpenAI API key.
 
 ### How to customize
-Send more fields to the model in **Describe the lead**. Change the four fit levels in **Score against ICP**. The same workflow as a Python script with agent instructions: github.com/evaboot-labs/AI-driven-Lead-Scoring"""
+Send more fields to the model in **Describe the lead**. Change the four fit levels in **Score against ICP**. The same workflow as a Python script with agent instructions: github.com/evaboot-labs/ai-driven-lead-scoring"""
 
 nodes = [
     sticky("Template overview", [-760, -300], 520, 860, OVERVIEW),
