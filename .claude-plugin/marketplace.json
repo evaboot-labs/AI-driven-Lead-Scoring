@@ -1,0 +1,17 @@
+{
+  "name": "evaboot-labs-ai-driven-lead-scoring",
+  "owner": {
+    "name": "Evaboot",
+    "url": "https://evaboot.com"
+  },
+  "metadata": {
+    "description": "Score HubSpot contacts against your ideal customer profile with an AI decision model (OpenAI Decisions API or JEV) and write the fit back to HubSpot. Python script, n8n template and agent skill."
+  },
+  "plugins": [
+    {
+      "name": "ai-driven-lead-scoring",
+      "source": "./",
+      "description": "Score HubSpot contacts against your ideal customer profile with an AI decision model (OpenAI Decisions API or JEV) and write the fit back to HubSpot. Python script, n8n template and agent skill."
+    }
+  ]
+}

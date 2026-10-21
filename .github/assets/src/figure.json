@@ -1,0 +1,5 @@
+{"layout": "cards", "eyebrow": "evaboot-labs · ai_icp_fit", "headline": "Four levels, one confidence.", "subline": "Every contact gets a level, a score from 0 to 100 and how sure the model is.",
+ "cards": [{"label": "0 · No fit", "title": "No fit", "quote": "Fails a disqualifier, or matches <u>none</u> of the must-haves."},
+           {"label": "1 · Weak fit", "title": "Weak fit", "quote": "Matches <u>one</u> must-have."},
+           {"label": "2 · Partial fit", "title": "Partial fit", "quote": "Matches most must-haves; <u>one</u> fails or is unknown."},
+           {"label": "3 · Strong fit", "title": "Strong fit", "quote": "Matches <u>every</u> must-have and no disqualifier."}]}
